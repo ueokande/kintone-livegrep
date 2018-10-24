@@ -2,73 +2,20 @@ package kintone
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"path/filepath"
 	"testing"
 )
 
 func TestRecord(t *testing.T) {
-	body := `{
-  "record": {
-    "Updated_datetime": {
-      "type": "UPDATED_TIME",
-      "value": "2018-10-24T01:35:00Z"
-    },
-    "Created_datetime": {
-      "type": "CREATED_TIME",
-      "value": "2018-10-24T01:35:00Z"
-    },
-    "Repositories": {
-      "type": "SUBTABLE",
-      "value": [
-        {
-          "id": "375434423",
-          "value": {
-            "branch": {
-              "type": "SINGLE_LINE_TEXT",
-              "value": "master"
-            },
-            "url": {
-              "type": "SINGLE_LINE_TEXT",
-              "value": "https://github.com/kubernetes/kubernetes"
-            }
-          }
-        }
-      ]
-    },
-    "Record_number": {
-      "type": "RECORD_NUMBER",
-      "value": "1"
-    },
-    "name": {
-      "type": "SINGLE_LINE_TEXT",
-      "value": "Kubernetes"
-    },
-    "Created_by": {
-      "type": "CREATOR",
-      "value": {
-        "code": "ueokande",
-        "name": "Shin'ya Ueoka"
-      }
-    },
-    "$revision": {
-      "type": "__REVISION__",
-      "value": "2"
-    },
-    "Updated_by": {
-      "type": "MODIFIER",
-      "value": {
-        "code": "ueokande",
-        "name": "Shin'ya Ueoka"
-      }
-    },
-    "$id": {
-      "type": "__ID__",
-      "value": "1"
-    }
-  }
-}`
+	path := filepath.Join("testdata", "record.json")
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	var resp RecordResponse
-	err := json.Unmarshal([]byte(body), &resp)
+	err = json.Unmarshal(bytes, &resp)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,72 +42,14 @@ func TestRecord(t *testing.T) {
 }
 
 func TestRecords(t *testing.T) {
-	body := `{
-  "records": [
-    {
-      "Updated_datetime": {
-        "type": "UPDATED_TIME",
-        "value": "2018-10-24T01:35:00Z"
-      },
-      "Created_datetime": {
-        "type": "CREATED_TIME",
-        "value": "2018-10-24T01:35:00Z"
-      },
-      "Repositories": {
-        "type": "SUBTABLE",
-        "value": [
-          {
-            "id": "375434423",
-            "value": {
-              "branch": {
-                "type": "SINGLE_LINE_TEXT",
-                "value": "master"
-              },
-              "url": {
-                "type": "SINGLE_LINE_TEXT",
-                "value": "https://github.com/kubernetes/kubernetes"
-              }
-            }
-          }
-        ]
-      },
-      "Record_number": {
-        "type": "RECORD_NUMBER",
-        "value": "1"
-      },
-      "name": {
-        "type": "SINGLE_LINE_TEXT",
-        "value": "Kubernetes"
-      },
-      "Created_by": {
-        "type": "CREATOR",
-        "value": {
-          "code": "uekande",
-          "name": "Shin'ya Ueoka"
-        }
-      },
-      "$revision": {
-        "type": "__REVISION__",
-        "value": "2"
-      },
-      "Updated_by": {
-        "type": "MODIFIER",
-        "value": {
-          "code": "uekande",
-          "name": "Shin'ya Ueoka"
-        }
-      },
-      "$id": {
-        "type": "__ID__",
-        "value": "1"
-      }
-    }
-  ],
-  "totalCount": null
-}`
+	path := filepath.Join("testdata", "records.json")
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	var resp RecordListResponse
-	err := json.Unmarshal([]byte(body), &resp)
+	err = json.Unmarshal(bytes, &resp)
 	if err != nil {
 		t.Fatal(err)
 	}

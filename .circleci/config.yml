@@ -1,0 +1,18 @@
+version: 2.1
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.11
+      - image: quay.io/coreos/etcd:v3.3
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "go.sum" }}
+      - run: golint -set_exit_status ./...
+      - run: go build -o /tmp/kcrawler ./cmd/kcrawler
+      - run: go vet ./...
+      - run: go test -race -v ./...
+      - save_cache:
+          key: dependency-cache-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg"

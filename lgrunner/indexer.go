@@ -75,6 +75,7 @@ func (d *runnerImpl) StopIndexDB(ctx context.Context, project string) error {
 	return nil
 }
 
+// IndexPath returns an index path of the project
 func IndexPath(project string) string {
 	return "/livegrep-index/" + project + ".idx"
 }

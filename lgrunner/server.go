@@ -6,11 +6,13 @@ import (
 	"github.com/ueokande/livegreptone/db"
 )
 
+// Server is a livegrep runner server
 type Server struct {
 	GitRootFS string
 	DB        db.Interface
 }
 
+// Run watches etcd and runs a livegrep containers
 func (s *Server) Run(ctx context.Context) error {
 	runner := runnerImpl{
 		gitRootFS: s.GitRootFS,

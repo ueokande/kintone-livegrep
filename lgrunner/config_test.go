@@ -11,7 +11,7 @@ func TestParseGitHubURL(t *testing.T) {
 		repo   string
 		e      bool
 	}{
-		{"https://github.com/kubernetes/client-go", "https://github.com", "kubernetes", "client-go", false},
+		{"https://github.com/kubernetes/client-go", "github.com", "kubernetes", "client-go", false},
 	}
 
 	for _, c := range cases {

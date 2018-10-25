@@ -23,12 +23,15 @@ type Interface interface {
 	// UpdateProject create or update a project of id
 	UpdateProject(ctx context.Context, project livegreptone.Project) error
 
+	// GetRepositories removes a repository
+	GetRepositories(ctx context.Context) ([]livegreptone.Repository, error)
+
 	// RemoveProject removes a project of id
 	RemoveProject(ctx context.Context, id string) error
 
 	// GetStatus returns an status of the repository
 	GetStatus(ctx context.Context, repo string, branch string) (livegreptone.RepositoryStatus, error)
 
-	// UpdateStatus creates or update status of the repository
+	// UpdateStatus creates if key is not existing or update if value is changed
 	UpdateStatus(ctx context.Context, repo string, branch string, status livegreptone.RepositoryStatus) error
 }

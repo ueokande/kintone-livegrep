@@ -2,6 +2,7 @@ package kcrawler
 
 import (
 	"context"
+	"log"
 
 	"github.com/ueokande/livegreptone"
 	"github.com/ueokande/livegreptone/db"
@@ -64,6 +65,7 @@ func (s *Server) cleanProjects(ctx context.Context, projects []livegreptone.Proj
 		if err != nil {
 			return err
 		}
+		log.Printf("Removed project %s ", id)
 	}
 	return nil
 }
@@ -74,6 +76,7 @@ func (s *Server) addProjects(ctx context.Context, projects []livegreptone.Projec
 		if err != nil {
 			return err
 		}
+		log.Printf("Updated project %s ", p.ID)
 	}
 	return nil
 }

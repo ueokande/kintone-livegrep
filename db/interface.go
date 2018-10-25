@@ -17,6 +17,9 @@ type Interface interface {
 	// GetProject returns a project of id
 	GetProject(ctx context.Context, id string) (livegreptone.Project, error)
 
+	// GetAllProjects returns all projects
+	GetAllProjects(ctx context.Context) ([]livegreptone.Project, error)
+
 	// GetProjectIDs returns project IDs
 	GetProjectIDs(ctx context.Context) ([]string, error)
 

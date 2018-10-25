@@ -34,13 +34,19 @@ func (s *Server) Run(ctx context.Context) error {
 			}
 		}
 
+		projects, err = s.DB.GetAllProjects(ctx)
+		if err != nil {
+			return err
+		}
+
 		// Ignore stopping web
-		// var config WebConfig
-		// runner.StopWeb(ctx)
-		// err = runner.RunWeb(ctx, config)
-		// if err != nil {
-		// 	return err
-		// }
+		runner.StopWeb(ctx)
+
+		config := WebConfigFromProjects(projects)
+		err = runner.RunWeb(ctx, config)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -12,7 +12,7 @@ import (
 
 func (d *runnerImpl) CreateIndex(ctx context.Context, manifest IndexManifest) error {
 	log.Printf("indexing %s...", manifest.Name)
-	f, err := ioutil.TempFile("", "livegreptone")
+	f, err := ioutil.TempFile("", "livegreptone-index")
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (d *runnerImpl) RunIndexDB(ctx context.Context, project string) error {
 	indexPath := IndexPath(project)
 	stderr := new(bytes.Buffer)
 	name := IndexContainerName(project)
-	cmd := exec.CommandContext(ctx, "docker", "run", "--read-only", "--rm", "--name="+name, "--hostname="+hostname,
+	cmd := exec.CommandContext(ctx, "docker", "run", "--read-only", "-d", "--rm", "--name="+name, "--hostname="+hostname,
 		"-v", IndexVolumeName+":/mnt/livegrep-index:ro",
 		Image, "/livegrep/bin/codesearch", "-load_index", "/mnt"+indexPath, "-grpc", "0.0.0.0:9999")
 	cmd.Stderr = stderr

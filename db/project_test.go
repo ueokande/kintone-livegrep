@@ -42,6 +42,34 @@ func testUpdateGet(t *testing.T) {
 	}
 }
 
+func testGetAllProjects(t *testing.T) {
+	ctx := context.Background()
+
+	p1 := livegreptone.Project{ID: "0", Name: "Kubernetes"}
+	p2 := livegreptone.Project{ID: "1", Name: "Ceph"}
+	p3 := livegreptone.Project{ID: "2", Name: "Mesos"}
+
+	etcd, err := NewEtcdClient(t)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := New(etcd)
+	for _, p := range []livegreptone.Project{p1, p2, p3} {
+		err := m.UpdateProject(ctx, p)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	projects, err := m.GetAllProjects(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(projects) != 3 {
+		t.Errorf("len(projects) != 3: %v", len(projects))
+	}
+}
+
 func testGetIDs(t *testing.T) {
 	ctx := context.Background()
 
@@ -136,6 +164,7 @@ func testGetOwnedProjects(t *testing.T) {
 
 func TestProject(t *testing.T) {
 	t.Run("UpdateGet", testUpdateGet)
+	t.Run("GetAllProjects", testGetAllProjects)
 	t.Run("GetIDs", testGetIDs)
 	t.Run("GetRepositories", testGetRepositories)
 	t.Run("GetOwnedProjects", testGetOwnedProjects)

@@ -28,6 +28,22 @@ func (d *model) GetProject(ctx context.Context, id string) (livegreptone.Project
 	return p, nil
 }
 
+// GetAllProjects returns all projects
+func (d *model) GetAllProjects(ctx context.Context) ([]livegreptone.Project, error) {
+	resp, err := d.etcd.Get(ctx, ProjectKeyPrefix, clientv3.WithPrefix())
+	if err != nil {
+		return nil, err
+	}
+	projects := make([]livegreptone.Project, resp.Count)
+	for i, kv := range resp.Kvs {
+		err := json.Unmarshal(kv.Value, &projects[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return projects, nil
+}
+
 // GetProjectIDs returns project IDs from etcd
 func (d *model) GetProjectIDs(ctx context.Context) ([]string, error) {
 	resp, err := d.etcd.Get(ctx, ProjectKeyPrefix,

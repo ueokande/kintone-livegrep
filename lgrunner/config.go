@@ -63,3 +63,17 @@ type BackendConfig struct {
 	ID      string `json:"id"`
 	Address string `json:"addr"`
 }
+
+func WebConfigFromProjects(projects []livegreptone.Project) WebConfig {
+	backends := make([]BackendConfig, len(projects))
+	for i, p := range projects {
+		backends[i] = BackendConfig{
+			ID:      p.Name,
+			Address: IndexHostName(p.Name) + ":9999",
+		}
+	}
+	return WebConfig{
+		Backends: backends,
+		Listen:   "0.0.0.0:8910",
+	}
+}

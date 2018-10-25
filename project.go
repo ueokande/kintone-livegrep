@@ -2,8 +2,8 @@ package livegreptone
 
 // Project represents a project
 type Project struct {
-	Id           string       `json:"name"`
-	Name         string       `json:"id"`
+	ID           string       `json:"id"`
+	Name         string       `json:"name"`
 	Repositories []Repository `json:"repositories"`
 	Revision     string       `json:"revision"`
 }

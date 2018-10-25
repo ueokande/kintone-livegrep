@@ -12,9 +12,9 @@ import (
 func TestProject(t *testing.T) {
 	ctx := context.Background()
 
-	p1 := livegreptone.Project{Id: "0", Name: "Kubernetes"}
-	p2 := livegreptone.Project{Id: "1", Name: "Ceph"}
-	p3 := livegreptone.Project{Id: "2", Name: "Mesos"}
+	p1 := livegreptone.Project{ID: "0", Name: "Kubernetes"}
+	p2 := livegreptone.Project{ID: "1", Name: "Ceph"}
+	p3 := livegreptone.Project{ID: "2", Name: "Mesos"}
 
 	etcd, err := NewEtcdClient(t)
 	if err != nil {
@@ -40,7 +40,7 @@ func TestProject(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ids, err := m.GetProjectIds(ctx)
+	ids, err := m.GetProjectIDs(ctx)
 	sort.Strings(ids)
 	if !reflect.DeepEqual(ids, []string{"0", "2"}) {
 		t.Errorf(`reflect.DeepEqual(ids, []string{"0", "2"}): %v`, ids)

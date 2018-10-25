@@ -8,15 +8,16 @@ import (
 	"github.com/ueokande/livegreptone/kintone/rest"
 )
 
+// Server is an kcrawler server
 type Server struct {
-	KintoneOrigin string
-	KintoneAppId  int
-	KintoneToken  string
-
+	// Kintone is an interface of the Kintone REST client
 	Kintone rest.Interface
-	DB      db.Interface
+
+	// DB is an interface of the database
+	DB db.Interface
 }
 
+// Run sync project informations from Kintone
 func (s *Server) Run(ctx context.Context) error {
 	records, err := s.Kintone.GetRecords(ctx)
 	if err != nil {
@@ -32,7 +33,7 @@ func (s *Server) Run(ctx context.Context) error {
 				Branch: r.Value.Branch.Value,
 			}
 		}
-		projects[i].Id = r.Id.Value
+		projects[i].ID = r.ID.Value
 		projects[i].Name = r.Name.Value
 		projects[i].Repositories = repos
 		projects[i].Revision = r.Revision.Value
@@ -47,7 +48,7 @@ func (s *Server) Run(ctx context.Context) error {
 }
 
 func (s *Server) cleanProjects(ctx context.Context, projects []livegreptone.Project) error {
-	ids, err := s.DB.GetProjectIds(ctx)
+	ids, err := s.DB.GetProjectIDs(ctx)
 	if err != nil {
 		return err
 	}
@@ -56,9 +57,9 @@ func (s *Server) cleanProjects(ctx context.Context, projects []livegreptone.Proj
 		idsSet[id] = struct{}{}
 	}
 	for _, p := range projects {
-		delete(idsSet, p.Id)
+		delete(idsSet, p.ID)
 	}
-	for id, _ := range idsSet {
+	for id := range idsSet {
 		err := s.DB.RemoveProject(ctx, id)
 		if err != nil {
 			return err

@@ -11,22 +11,23 @@ import (
 type restHTTPClient struct {
 	http   *http.Client
 	origin string
-	appId  int
+	appID  int
 	token  string
 }
 
-func NewClient(http *http.Client, origin string, appId int, token string) Interface {
+// NewClient creates an implementation of the Kintone Client
+func NewClient(http *http.Client, origin string, appID int, token string) Interface {
 	return &restHTTPClient{
 		http:   http,
 		origin: origin,
-		appId:  appId,
+		appID:  appID,
 		token:  token,
 	}
 }
 
 // GetRecords gets a record
 func (c *restHTTPClient) GetRecord(ctx context.Context, id int) (*kintone.Record, error) {
-	url := getRecordURL(c.origin, c.appId, id)
+	url := getRecordURL(c.origin, c.appID, id)
 	r, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -51,7 +52,7 @@ func (c *restHTTPClient) GetRecord(ctx context.Context, id int) (*kintone.Record
 // GetRecords gets record list
 func (c *restHTTPClient) GetRecords(ctx context.Context) ([]kintone.Record, error) {
 	// TODO support records more than 100 records
-	url := getRecordsURL(c.origin, c.appId)
+	url := getRecordsURL(c.origin, c.appID)
 	r, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err

@@ -13,13 +13,13 @@ func (d *mock) GetProject(ctx context.Context, id string) (livegreptone.Project,
 	return d.projects[id], nil
 }
 
-func (d *mock) GetProjectIds(ctx context.Context) ([]string, error) {
+func (d *mock) GetProjectIDs(ctx context.Context) ([]string, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	ids := make([]string, len(d.projects))
 	i := 0
-	for id, _ := range d.projects {
+	for id := range d.projects {
 		ids[i] = id
 		i++
 	}
@@ -30,7 +30,7 @@ func (d *mock) UpdateProject(ctx context.Context, project livegreptone.Project) 
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	d.projects[project.Id] = project
+	d.projects[project.ID] = project
 	return nil
 }
 

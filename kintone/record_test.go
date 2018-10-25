@@ -23,8 +23,8 @@ func TestRecord(t *testing.T) {
 	if record.Name.Value != "Kubernetes" {
 		t.Errorf("record.Name.Value != \"Kubernetes\"; %v", record.Name.Value)
 	}
-	if record.Id.Value != "1" {
-		t.Errorf("record.Id.Value != \"1\"; %v", record.Id.Value)
+	if record.ID.Value != "1" {
+		t.Errorf("record.ID.Value != \"1\"; %v", record.ID.Value)
 	}
 	if record.Revision.Value != "2" {
 		t.Errorf("record.Revision.Value != \"1\"; %v", record.Revision.Value)
@@ -61,8 +61,8 @@ func TestRecords(t *testing.T) {
 	if record.Name.Value != "Kubernetes" {
 		t.Errorf("record.Name.Value != \"Kubernetes\"; %v", record.Name.Value)
 	}
-	if record.Id.Value != "1" {
-		t.Errorf("record.Id.Value != \"1\"; %v", record.Id.Value)
+	if record.ID.Value != "1" {
+		t.Errorf("record.ID.Value != \"1\"; %v", record.ID.Value)
 	}
 	if record.Revision.Value != "2" {
 		t.Errorf("record.Revision.Value != \"1\"; %v", record.Revision.Value)

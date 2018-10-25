@@ -13,6 +13,7 @@ type mock struct {
 	statuses map[string]livegreptone.RepositoryStatus
 }
 
+// New returns mock implementation of db.Interface
 func New() db.Interface {
 	return &mock{
 		mu:       new(sync.Mutex),

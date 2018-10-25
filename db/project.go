@@ -8,6 +8,7 @@ import (
 	"github.com/ueokande/livegreptone"
 )
 
+// GetProject returns a project of id from etcd
 func (d *model) GetProject(ctx context.Context, id string) (livegreptone.Project, error) {
 	key := ProjectKey(id)
 	resp, err := d.etcd.Get(ctx, key)
@@ -26,7 +27,8 @@ func (d *model) GetProject(ctx context.Context, id string) (livegreptone.Project
 	return p, nil
 }
 
-func (d *model) GetProjectIds(ctx context.Context) ([]string, error) {
+// GetProjectIDs returns project IDs from etcd
+func (d *model) GetProjectIDs(ctx context.Context) ([]string, error) {
 	resp, err := d.etcd.Get(ctx, ProjectKeyPrefix,
 		clientv3.WithPrefix(), clientv3.WithKeysOnly())
 	if err != nil {
@@ -39,8 +41,9 @@ func (d *model) GetProjectIds(ctx context.Context) ([]string, error) {
 	return ids, nil
 }
 
+// UpdateProject create or update a project of id from etcd
 func (d *model) UpdateProject(ctx context.Context, project livegreptone.Project) error {
-	key := ProjectKey(project.Id)
+	key := ProjectKey(project.ID)
 	value, err := json.Marshal(project)
 	if err != nil {
 		return err
@@ -52,6 +55,7 @@ func (d *model) UpdateProject(ctx context.Context, project livegreptone.Project)
 	return nil
 }
 
+// RemoveProject removes a project of id from metcd
 func (d *model) RemoveProject(ctx context.Context, id string) error {
 	key := ProjectKey(id)
 	_, err := d.etcd.Delete(ctx, key)

@@ -15,6 +15,7 @@ type mock struct {
 	records []kintone.Record
 }
 
+// New creates an mock implementation of the rest.Interface
 func New(records []kintone.Record) rest.Interface {
 	return &mock{
 		mu:      new(sync.Mutex),
@@ -27,7 +28,7 @@ func (m *mock) GetRecord(ctx context.Context, id int) (*kintone.Record, error) {
 
 	idstr := strconv.Itoa(id)
 	for _, r := range m.records {
-		if r.Id.Value == idstr {
+		if r.ID.Value == idstr {
 			return &r, nil
 		}
 	}

@@ -26,6 +26,9 @@ type Interface interface {
 	// GetRepositories removes a repository
 	GetRepositories(ctx context.Context) ([]livegreptone.Repository, error)
 
+	// GetOwnedProjects returns owner projects of the repository
+	GetOwnedProjects(ctx context.Context, repo string, branch string) ([]livegreptone.Project, error)
+
 	// RemoveProject removes a project of id
 	RemoveProject(ctx context.Context, id string) error
 

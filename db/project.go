@@ -95,3 +95,26 @@ func (d *model) GetRepositories(ctx context.Context) ([]livegreptone.Repository,
 	}
 	return repos, nil
 }
+
+// GetOwnedProjects returns owner projects of the repository from etcd
+func (d *model) GetOwnedProjects(ctx context.Context, repo string, branch string) ([]livegreptone.Project, error) {
+	resp, err := d.etcd.Get(ctx, ProjectKeyPrefix, clientv3.WithPrefix())
+	if err != nil {
+		return nil, err
+	}
+	var projects []livegreptone.Project
+	for _, kv := range resp.Kvs {
+		var project livegreptone.Project
+		err := json.Unmarshal(kv.Value, &project)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, r := range project.Repositories {
+			if r.URL == repo && r.Branch == branch {
+				projects = append(projects, project)
+			}
+		}
+	}
+	return projects, nil
+}

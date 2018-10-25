@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/ueokande/livegreptone"
@@ -63,4 +64,34 @@ func (d *model) RemoveProject(ctx context.Context, id string) error {
 		return err
 	}
 	return nil
+}
+
+// GetRepositories gets repository list in projects
+func (d *model) GetRepositories(ctx context.Context) ([]livegreptone.Repository, error) {
+	resp, err := d.etcd.Get(ctx, ProjectKeyPrefix, clientv3.WithPrefix())
+	if err != nil {
+		return nil, err
+	}
+	repoSet := make(map[string]struct{})
+	for _, kv := range resp.Kvs {
+		var project livegreptone.Project
+		err := json.Unmarshal(kv.Value, &project)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, r := range project.Repositories {
+			key := r.URL + "\x00" + r.Branch
+			repoSet[key] = struct{}{}
+		}
+	}
+
+	repos := make([]livegreptone.Repository, len(repoSet))
+	i := 0
+	for key := range repoSet {
+		kv := strings.Split(key, "\x00")
+		repos[i] = livegreptone.Repository{URL: kv[0], Branch: kv[1]}
+		i++
+	}
+	return repos, nil
 }

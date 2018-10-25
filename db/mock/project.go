@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"strings"
 
 	"github.com/ueokande/livegreptone"
 )
@@ -41,4 +42,25 @@ func (d *mock) RemoveProject(ctx context.Context, id string) error {
 	delete(d.projects, id)
 
 	return nil
+}
+
+func (d *mock) GetRepositories(ctx context.Context) ([]livegreptone.Repository, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	repoSet := make(map[string]struct{})
+	for _, p := range d.projects {
+		for _, r := range p.Repositories {
+			key := r.URL + "\x00" + r.Branch
+			repoSet[key] = struct{}{}
+		}
+	}
+	repos := make([]livegreptone.Repository, len(repoSet))
+	i := 0
+	for key := range repoSet {
+		kv := strings.Split(key, "\x00")
+		repos[i] = livegreptone.Repository{URL: kv[0], Branch: kv[1]}
+		i++
+	}
+	return repos, nil
 }

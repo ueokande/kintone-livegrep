@@ -64,3 +64,15 @@ func (d *mock) GetRepositories(ctx context.Context) ([]livegreptone.Repository, 
 	}
 	return repos, nil
 }
+
+func (d *mock) GetOwnedProjects(ctx context.Context, repo string, branch string) ([]livegreptone.Project, error) {
+	var projects []livegreptone.Project
+	for _, p := range d.projects {
+		for _, r := range p.Repositories {
+			if r.URL == repo && r.Branch == branch {
+				projects = append(projects, p)
+			}
+		}
+	}
+	return projects, nil
+}

@@ -22,7 +22,12 @@ func (d *mock) UpdateStatus(ctx context.Context, status livegreptone.RepositoryS
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	key := repo + "/" + branch
+	key := status.URL + "/" + status.Branch
 	d.statuses[key] = status
+	return nil
+}
+
+func (d *mock) WatchStatus(ctx context.Context) <-chan livegreptone.RepositoryStatus {
+	// TODO
 	return nil
 }

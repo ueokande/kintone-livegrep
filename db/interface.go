@@ -37,4 +37,7 @@ type Interface interface {
 
 	// UpdateStatus creates if key is not existing or update if value is changed
 	UpdateStatus(ctx context.Context, status livegreptone.RepositoryStatus) error
+
+	// WatchStatus watches repository statuses
+	WatchStatus(ctx context.Context) <-chan livegreptone.RepositoryStatus
 }

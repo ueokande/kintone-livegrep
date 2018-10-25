@@ -17,33 +17,33 @@ import (
 )
 
 var (
-	KintoneOrigin = os.Getenv("KINTONE_ORIGIN")
-	KintoneAppID  = os.Getenv("KINTONE_APP_ID")
-	KintoneToken  = os.Getenv("KINTONE_API_TOKEN")
-	EtcdEndpoints = os.Getenv("ETCD_ENDPOINTS")
-	EtcdPrefix    = os.Getenv("ETCD_PREFIX")
+	kintoneOrigin = os.Getenv("KINTONE_ORIGIN")
+	kintoneAppID  = os.Getenv("KINTONE_APP_ID")
+	kintoneToken  = os.Getenv("KINTONE_API_TOKEN")
+	etcdEndpoints = os.Getenv("ETCD_ENDPOINTS")
+	etcdPrefix    = os.Getenv("ETCD_PREFIX")
 )
 
 func main() {
-	if len(KintoneOrigin) == 0 {
+	if len(kintoneOrigin) == 0 {
 		log.Fatal(errors.New("KINTONE_ORIGIN is not set"))
 	}
-	if len(KintoneAppID) == 0 {
+	if len(kintoneAppID) == 0 {
 		log.Fatal(errors.New("KINTONE_APP_ID is not set"))
 	}
-	if len(KintoneToken) == 0 {
+	if len(kintoneToken) == 0 {
 		log.Fatal(errors.New("KINTONE_API_TOKEN is not set"))
 	}
-	if len(EtcdEndpoints) == 0 {
+	if len(etcdEndpoints) == 0 {
 		log.Fatal(errors.New("ETCD_ENDPOINTS is not set"))
 	}
 
-	appID, err := strconv.Atoi(KintoneAppID)
+	appID, err := strconv.Atoi(kintoneAppID)
 	if err != nil {
 		log.Fatalf("invalid KINTONE_APP_ID: %v", err)
 	}
 
-	k := rest.NewClient(&http.Client{}, KintoneOrigin, appID, KintoneToken)
+	k := rest.NewClient(&http.Client{}, kintoneOrigin, appID, kintoneToken)
 	etcdcfg := clientv3.Config{
 		Endpoints:   []string{"http://127.0.0.1:2379"},
 		DialTimeout: 2 * time.Second,
@@ -53,10 +53,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to launch etcd: %v", err)
 	}
-	if len(EtcdPrefix) > 0 {
-		etcd.KV = namespace.NewKV(etcd.KV, EtcdPrefix)
-		etcd.Watcher = namespace.NewWatcher(etcd.Watcher, EtcdPrefix)
-		etcd.Lease = namespace.NewLease(etcd.Lease, EtcdPrefix)
+	if len(etcdPrefix) > 0 {
+		etcd.KV = namespace.NewKV(etcd.KV, etcdPrefix)
+		etcd.Watcher = namespace.NewWatcher(etcd.Watcher, etcdPrefix)
+		etcd.Lease = namespace.NewLease(etcd.Lease, etcdPrefix)
 	}
 	db := db.New(etcd)
 	s := kcrawler.Server{

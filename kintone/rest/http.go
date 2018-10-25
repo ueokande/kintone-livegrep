@@ -15,6 +15,15 @@ type restHTTPClient struct {
 	token  string
 }
 
+func NewClient(http *http.Client, origin string, appId int, token string) Interface {
+	return &restHTTPClient{
+		http:   http,
+		origin: origin,
+		appId:  appId,
+		token:  token,
+	}
+}
+
 // GetRecords gets a record
 func (c *restHTTPClient) GetRecord(ctx context.Context, id int) (*kintone.Record, error) {
 	url := getRecordURL(c.origin, c.appId, id)

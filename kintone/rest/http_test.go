@@ -61,7 +61,10 @@ func testGetRecords(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(records) != 1 {
-		t.Errorf("len(records) != 1: %v", len(records))
+		t.Fatalf("len(records) != 1: %v", len(records))
+	}
+	if len(records[0].Repositories.Value) != 1 {
+		t.Errorf("len(records[0].Repositories.Value) != 1: %v", len(records))
 	}
 }
 

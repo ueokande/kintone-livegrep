@@ -6,8 +6,8 @@ import (
 	"github.com/ueokande/livegreptone/kintone"
 )
 
-type REST interface {
+type Interface interface {
 	GetRecord(ctx context.Context, id int) (*kintone.Record, error)
 
-	GetRecords(ctx context.Context) ([]*kintone.Record, error)
+	GetRecords(ctx context.Context) ([]kintone.Record, error)
 }

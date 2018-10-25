@@ -69,6 +69,7 @@ func (v *vcs) checkoutUpdated(ctx context.Context, path string, branch string) e
 	stderr := new(bytes.Buffer)
 	cmd := exec.CommandContext(ctx, "git", "remote", "update")
 	cmd.Stderr = stderr
+	cmd.Dir = path
 	err := cmd.Run()
 	if err != nil {
 		log.Printf("failed to git remote update, path=%s, stderr=%s", path, stderr.String())
@@ -76,13 +77,15 @@ func (v *vcs) checkoutUpdated(ctx context.Context, path string, branch string) e
 	}
 
 	stderr = new(bytes.Buffer)
-	cmd = exec.CommandContext(ctx, "git", "checkout", "origin/"+branch)
+	cmd = exec.CommandContext(ctx, "git", "checkout", "-qf", "origin/"+branch)
 	cmd.Stderr = stderr
+	cmd.Dir = path
 	err = cmd.Run()
 	if err != nil {
 		log.Printf("failed to git checkout, path=%s, branch=%s, stderr=%s", path, branch, stderr.String())
 		return err
 	}
+	log.Printf("checked out path=%s branch=%s", path, branch)
 	return nil
 }
 

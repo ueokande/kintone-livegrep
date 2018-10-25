@@ -1,0 +1,47 @@
+package lgrunner
+
+import (
+	"context"
+
+	"github.com/ueokande/livegreptone/db"
+)
+
+type Server struct {
+	GitRootFS string
+	DB        db.Interface
+}
+
+func (s *Server) Run(ctx context.Context) error {
+	runner := runnerImpl{
+		gitRootFS: s.GitRootFS,
+	}
+	for st := range s.DB.WatchStatus(ctx) {
+		projects, err := s.DB.GetOwnedProjects(ctx, st.URL, st.Branch)
+		if err != nil {
+			return err
+		}
+		for _, p := range projects {
+			manifest := ManifestFromProject(p)
+			err := runner.CreateIndex(ctx, manifest)
+			if err != nil {
+				return err
+			}
+			// Ignore stopping index db
+			runner.StopIndexDB(ctx, p.Name)
+			err = runner.RunIndexDB(ctx, p.Name)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Ignore stopping web
+		// var config WebConfig
+		// runner.StopWeb(ctx)
+		// err = runner.RunWeb(ctx, config)
+		// if err != nil {
+		// 	return err
+		// }
+	}
+
+	return nil
+}

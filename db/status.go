@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"encoding/json"
+	"log"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/ueokande/livegreptone"
@@ -42,4 +43,31 @@ func (d *model) UpdateStatus(ctx context.Context, status livegreptone.Repository
 		return err
 	}
 	return nil
+}
+
+func (d *model) WatchStatus(ctx context.Context) <-chan livegreptone.RepositoryStatus {
+	rch := d.etcd.Watch(ctx, StatusesKeyPrefix,
+		clientv3.WithPrefix(),
+	)
+	ch := make(chan livegreptone.RepositoryStatus)
+	go func() {
+		for resp := range rch {
+			for _, ev := range resp.Events {
+				if ev.Type != clientv3.EventTypePut {
+					// TODO support delete
+					continue
+				}
+				var s livegreptone.RepositoryStatus
+				err := json.Unmarshal(ev.Kv.Value, &s)
+				if err != nil {
+					log.Printf("failed parse json for %s", ev.Kv.Key)
+					goto exit
+				}
+				ch <- s
+			}
+		}
+	exit:
+		close(ch)
+	}()
+	return ch
 }

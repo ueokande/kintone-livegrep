@@ -28,8 +28,12 @@ func (s *Server) Run(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		st := livegreptone.RepositoryStatus{Commit: commit}
-		err = s.DB.UpdateStatus(ctx, r.URL, r.Branch, st)
+		st := livegreptone.RepositoryStatus{
+			URL:    r.URL,
+			Branch: r.Branch,
+			Commit: commit,
+		}
+		err = s.DB.UpdateStatus(ctx, st)
 		if err != nil {
 			return err
 		}

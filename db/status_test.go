@@ -15,13 +15,19 @@ func testGetAndUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 	m := New(etcd)
-	err = m.UpdateStatus(ctx, "https://github.com/kubernetes/kubernetes", "master",
-		livegreptone.RepositoryStatus{Commit: "1234ABCD"})
+	err = m.UpdateStatus(ctx, livegreptone.RepositoryStatus{
+		URL:    "https://github.com/kubernetes/kubernetes",
+		Branch: "master",
+		Commit: "1234ABCD",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = m.UpdateStatus(ctx, "https://github.com/kubernetes/kubernetes", "release-1.11",
-		livegreptone.RepositoryStatus{Commit: "1000AAAA"})
+	err = m.UpdateStatus(ctx, livegreptone.RepositoryStatus{
+		URL:    "https://github.com/kubernetes/kubernetes",
+		Branch: "release-1.11",
+		Commit: "1000AAAA",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,14 +56,20 @@ func testUpdateIfNoUpdates(t *testing.T) {
 		t.Fatal(err)
 	}
 	m := New(etcd)
-	err = m.UpdateStatus(ctx, "https://github.com/kubernetes/kubernetes", "master",
-		livegreptone.RepositoryStatus{Commit: "1234ABCD"})
+	err = m.UpdateStatus(ctx, livegreptone.RepositoryStatus{
+		URL:    "https://github.com/kubernetes/kubernetes",
+		Branch: "master",
+		Commit: "1234ABCD",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = m.UpdateStatus(ctx, "https://github.com/kubernetes/kubernetes", "master",
-		livegreptone.RepositoryStatus{Commit: "1000AAAA"})
+	err = m.UpdateStatus(ctx, livegreptone.RepositoryStatus{
+		URL:    "https://github.com/kubernetes/kubernetes",
+		Branch: "master",
+		Commit: "1000AAAA",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,8 +85,11 @@ func testUpdateIfNoUpdates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = m.UpdateStatus(ctx, "https://github.com/kubernetes/kubernetes", "master",
-		livegreptone.RepositoryStatus{Commit: "1000AAAA"})
+	err = m.UpdateStatus(ctx, livegreptone.RepositoryStatus{
+		URL:    "https://github.com/kubernetes/kubernetes",
+		Branch: "master",
+		Commit: "1000AAAA",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

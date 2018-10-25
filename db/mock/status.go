@@ -18,7 +18,7 @@ func (d *mock) GetStatus(ctx context.Context, repo string, branch string) (liveg
 	}
 	return status, nil
 }
-func (d *mock) UpdateStatus(ctx context.Context, repo string, branch string, status livegreptone.RepositoryStatus) error {
+func (d *mock) UpdateStatus(ctx context.Context, status livegreptone.RepositoryStatus) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 

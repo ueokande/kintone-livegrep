@@ -33,5 +33,5 @@ type Interface interface {
 	GetStatus(ctx context.Context, repo string, branch string) (livegreptone.RepositoryStatus, error)
 
 	// UpdateStatus creates if key is not existing or update if value is changed
-	UpdateStatus(ctx context.Context, repo string, branch string, status livegreptone.RepositoryStatus) error
+	UpdateStatus(ctx context.Context, status livegreptone.RepositoryStatus) error
 }

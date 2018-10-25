@@ -27,8 +27,8 @@ func (d *model) GetStatus(ctx context.Context, repo string, branch string) (live
 }
 
 // UpdateStatus creates or update status of the repository from etcd
-func (d *model) UpdateStatus(ctx context.Context, repo string, branch string, status livegreptone.RepositoryStatus) error {
-	key := StatusKey(repo, branch)
+func (d *model) UpdateStatus(ctx context.Context, status livegreptone.RepositoryStatus) error {
+	key := StatusKey(status.URL, status.Branch)
 	value, err := json.Marshal(status)
 	if err != nil {
 		return err

@@ -2,6 +2,9 @@ package lgrunner
 
 import (
 	"context"
+	"strings"
+
+	"github.com/docker/docker/client"
 )
 
 const (
@@ -13,11 +16,8 @@ const (
 type Runner interface {
 	CreateIndex(ctx context.Context, manifest IndexManifest) error
 
-	RunIndexDB(ctx context.Context, project string) error
-	StopIndexDB(ctx context.Context, project string) error
-
-	RunWeb(ctx context.Context, config WebConfig) error
-	StopWeb(ctx context.Context) error
+	RerunIndexDB(ctx context.Context, project string) error
+	RerunWeb(ctx context.Context, config WebConfig) error
 }
 
 // NewRunner creates a Runner
@@ -29,4 +29,13 @@ func NewRunner(gitRootFS string) Runner {
 
 type runnerImpl struct {
 	gitRootFS string
+	docker    *client.Client
+}
+
+// IsErrNoSuchContainer returns true if err container "No such container"
+func IsErrNoSuchContainer(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "No such container")
 }

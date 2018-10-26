@@ -1,13 +1,16 @@
 package lgrunner
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/strslice"
 )
 
 func (d *runnerImpl) CreateIndex(ctx context.Context, manifest IndexManifest) error {
@@ -24,58 +27,88 @@ func (d *runnerImpl) CreateIndex(ctx context.Context, manifest IndexManifest) er
 		return err
 	}
 
-	indexPath := IndexPath(manifest.Name)
-	stderr := new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "docker", "run", "--rm", "--read-only",
-		"-v", d.gitRootFS+":/mnt/livegrep-repos:ro",
-		"-v", IndexVolumeName+":/mnt/livegrep-index:rw",
-		"-v", f.Name()+":/mnt/manifest.json:ro",
-		Image, "/livegrep/bin/codesearch",
-		"-index_only", "-dump_index", "/mnt"+indexPath, "/mnt/manifest.json")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = stderr
-	err = cmd.Run()
+	cmd := []string{
+		"/livegrep/bin/codesearch", "-index_only", "-dump_index", "/mnt" + IndexPath(manifest.Name), "/mnt/manifest.json",
+	}
+	containerConfig := &container.Config{
+		Image: Image,
+		Cmd:   strslice.StrSlice(cmd),
+	}
+	hostConfig := &container.HostConfig{
+		ReadonlyRootfs: true,
+		AutoRemove:     true,
+		Mounts: []mount.Mount{
+			{Type: mount.TypeBind, Source: d.gitRootFS, Target: "/mnt/livegrep-repos", ReadOnly: true},
+			{Type: mount.TypeVolume, Source: IndexVolumeName, Target: "/mnt/livegrep-index"},
+			{Type: mount.TypeBind, Source: f.Name(), Target: "/mnt/manifest.json", ReadOnly: true},
+		},
+	}
+	resp, err := d.docker.ContainerCreate(ctx, containerConfig, hostConfig, nil, "")
 	if err != nil {
-		log.Printf("failed to index %s: %v: args=%v, stderr=%s", manifest.Name, err, cmd.Args, stderr.String())
+		log.Printf("failed to create a container for indexing %s: %v", manifest.Name, err)
+	}
+
+	err = d.docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	if err != nil {
+		log.Printf("failed to start a container for indexing %s: %v", manifest.Name, err)
 		return err
 	}
-	log.Printf("indexed %s", manifest.Name)
+	_, err = d.docker.ContainerWait(ctx, resp.ID)
+	if err != nil {
+		log.Printf("failed to wait a container for indexing %s: %v", manifest.Name, err)
+		return err
+	}
+	log.Printf("Indexing %s completed", manifest.Name)
 	return nil
 }
 
-func (d *runnerImpl) RunIndexDB(ctx context.Context, project string) error {
-	hostname := IndexHostName(project)
-	indexPath := IndexPath(project)
-	stderr := new(bytes.Buffer)
+func (d *runnerImpl) RerunIndexDB(ctx context.Context, project string) error {
+	log.Printf("restarting index server for %s", project)
 	name := IndexContainerName(project)
-	cmd := exec.CommandContext(ctx, "docker", "run", "--read-only", "-d", "--rm", "--name="+name, "--hostname="+hostname,
-		"-v", IndexVolumeName+":/mnt/livegrep-index:ro",
-		Image, "/livegrep/bin/codesearch", "-load_index", "/mnt"+indexPath, "-grpc", "0.0.0.0:9999")
-	cmd.Stderr = stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Printf("failed to run index server: project=%s: %v: stderr=%s", project, err, stderr.String())
+	err := d.docker.ContainerKill(ctx, name, "SIGTERM")
+	if IsErrNoSuchContainer(err) {
+		err := d.createIndexDB(ctx, project)
+		if err != nil {
+			log.Printf("failed to create indexing container for %s: %v", project, err)
+			return err
+		}
+	} else if err != nil {
+		log.Printf("Failed to kill index server for %s: %v", project, err)
 		return err
+	} else {
+		log.Printf("Killed index server for %s", project)
 	}
-	log.Printf("started index server: project=%s", project)
-	return nil
-}
 
-func (d *runnerImpl) StopIndexDB(ctx context.Context, project string) error {
-	name := IndexContainerName(project)
-	stderr := new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "docker", "stop", name)
-	cmd.Stderr = stderr
-	err := cmd.Run()
+	err = d.docker.ContainerStart(ctx, name, types.ContainerStartOptions{})
 	if err != nil {
-		log.Printf("failed to stop index server %s: %v: stderr=%s", project, err, stderr.String())
+		log.Printf("failed to start index server for %s: %v", project, err)
 		return err
 	}
-	log.Printf("stopped index server: project=%s", project)
+	log.Printf("started index server for %s", project)
 	return nil
 }
 
 // IndexPath returns an index path of the project
 func IndexPath(project string) string {
 	return "/livegrep-index/" + project + ".idx"
+}
+
+func (d *runnerImpl) createIndexDB(ctx context.Context, project string) error {
+	name := IndexContainerName(project)
+	cmd := []string{
+		"/livegrep/bin/codesearch", "-load_index", "/mnt" + IndexPath(project), "-grpc", "0.0.0.0:9999",
+	}
+	containerConfig := &container.Config{
+		Image:    Image,
+		Cmd:      strslice.StrSlice(cmd),
+		Hostname: IndexHostName(project),
+	}
+	hostConfig := &container.HostConfig{
+		ReadonlyRootfs: true,
+		Mounts: []mount.Mount{
+			{Type: mount.TypeVolume, Source: IndexVolumeName, Target: "/mnt/livegrep-index", ReadOnly: true},
+		},
+	}
+	_, err := d.docker.ContainerCreate(ctx, containerConfig, hostConfig, nil, name)
+	return err
 }

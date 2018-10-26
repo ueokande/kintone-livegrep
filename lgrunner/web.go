@@ -1,17 +1,22 @@
 package lgrunner
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/strslice"
+	"github.com/docker/go-connections/nat"
 )
 
-func (d *runnerImpl) RunWeb(ctx context.Context, config WebConfig) error {
+func (d *runnerImpl) RerunWeb(ctx context.Context, config WebConfig) error {
+	log.Printf("restarting web server")
 	f, err := ioutil.TempFile("", "livegreptone-web")
 	if err != nil {
 		return err
@@ -24,37 +29,58 @@ func (d *runnerImpl) RunWeb(ctx context.Context, config WebConfig) error {
 		return err
 	}
 
-	args := []string{"run", "--read-only", "-d", "--rm",
-		"--name=" + WebContainerName, "--hostname=" + WebHostName, "-p", "8910:8910",
-		"-v", f.Name() + ":/etc/livegrep/livegrep.json:ro",
-	}
-	for _, b := range config.Backends {
+	links := make([]string, len(config.Backends))
+	for i, b := range config.Backends {
 		h := strings.Split(b.Address, ":")[0]
-		args = append(args, "--link", h)
+		links[i] = h
 	}
-	args = append(args, Image, "/livegrep/bin/livegrep", "-docroot", "/livegrep/web/", "/etc/livegrep/livegrep.json")
 
-	stderr := new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "docker", args...)
-	cmd.Stderr = stderr
-	err = cmd.Run()
+	err = d.docker.ContainerKill(ctx, WebContainerName, "SIGTERM")
+	if IsErrNoSuchContainer(err) {
+		err := d.createWeb(ctx, f.Name(), links)
+		if err != nil {
+			log.Printf("failed to create web container: %v", err)
+			return err
+		}
+	} else if err != nil {
+		log.Printf("Failed to kill web server: %v", err)
+		return err
+	} else {
+		log.Printf("Killed web server")
+	}
+
+	err = d.docker.ContainerStart(ctx, WebContainerName, types.ContainerStartOptions{})
 	if err != nil {
-		log.Printf("failed to run index server: %v: args=%v stderr=%s", err, args, stderr.String())
+		log.Printf("failed to start web: %v", err)
 		return err
 	}
 	log.Printf("started web server")
 	return nil
 }
 
-func (d *runnerImpl) StopWeb(ctx context.Context) error {
-	stderr := new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "docker", "stop", WebContainerName)
-	cmd.Stderr = stderr
-	err := cmd.Run()
-	if err != nil {
-		log.Printf("failed to web server %v: stderr=%s", err, stderr.String())
-		return err
+func (d *runnerImpl) createWeb(ctx context.Context, confpath string, links []string) error {
+	cmd := []string{
+		"/livegrep/bin/livegrep", "-docroot", "/livegrep/web/", "/etc/livegrep/livegrep.json",
 	}
-	log.Printf("stopped web server")
-	return nil
+
+	containerConfig := &container.Config{
+		Image:    Image,
+		Cmd:      strslice.StrSlice(cmd),
+		Hostname: WebHostName,
+	}
+	hostConfig := &container.HostConfig{
+		AutoRemove:     true,
+		ReadonlyRootfs: true,
+		Mounts: []mount.Mount{
+			{Type: mount.TypeBind, Source: confpath, Target: "/etc/livegrep/livegrep.json", ReadOnly: true},
+		},
+		PortBindings: map[nat.Port][]nat.PortBinding{
+			"8910/tcp": []nat.PortBinding{
+				{HostIP: "0.0.0.0", HostPort: "8910"},
+			},
+		},
+		Links: links,
+	}
+	_, err := d.docker.ContainerCreate(ctx, containerConfig, hostConfig, nil, WebContainerName)
+	return err
 }

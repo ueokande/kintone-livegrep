@@ -2,7 +2,11 @@ package lgrunner
 
 import (
 	"context"
+	"io/ioutil"
+	"log"
 
+	"github.com/docker/docker/api/types"
+	docker "github.com/docker/docker/client"
 	"github.com/ueokande/livegreptone/db"
 )
 
@@ -14,9 +18,26 @@ type Server struct {
 
 // Run watches etcd and runs a livegrep containers
 func (s *Server) Run(ctx context.Context) error {
+	d, err := docker.NewEnvClient()
+	if err != nil {
+		return err
+	}
+	r, err := d.ImagePull(ctx, Image, types.ImagePullOptions{})
+	if err != nil {
+		log.Printf("failed to pull image: %v", err)
+		return err
+	}
+	out, err := ioutil.ReadAll(r)
+	if err != nil {
+		return err
+	}
+	log.Printf("Pulled image: %v", string(out))
+
 	runner := runnerImpl{
 		gitRootFS: s.GitRootFS,
+		docker:    d,
 	}
+
 	for st := range s.DB.WatchStatus(ctx) {
 		projects, err := s.DB.GetOwnedProjects(ctx, st.URL, st.Branch)
 		if err != nil {
@@ -28,9 +49,7 @@ func (s *Server) Run(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			// Ignore stopping index db
-			runner.StopIndexDB(ctx, p.Name)
-			err = runner.RunIndexDB(ctx, p.Name)
+			err = runner.RerunIndexDB(ctx, p.Name)
 			if err != nil {
 				return err
 			}
@@ -41,11 +60,8 @@ func (s *Server) Run(ctx context.Context) error {
 			return err
 		}
 
-		// Ignore stopping web
-		runner.StopWeb(ctx)
-
 		config := WebConfigFromProjects(projects)
-		err = runner.RunWeb(ctx, config)
+		err = runner.RerunWeb(ctx, config)
 		if err != nil {
 			return err
 		}

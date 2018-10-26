@@ -18,11 +18,16 @@ func (d *mock) GetStatus(ctx context.Context, repo string, branch string) (liveg
 	}
 	return status, nil
 }
-func (d *mock) UpdateStatus(ctx context.Context, repo string, branch string, status livegreptone.RepositoryStatus) error {
+func (d *mock) UpdateStatus(ctx context.Context, status livegreptone.RepositoryStatus) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	key := repo + "/" + branch
+	key := status.URL + "/" + status.Branch
 	d.statuses[key] = status
+	return nil
+}
+
+func (d *mock) WatchStatus(ctx context.Context) <-chan livegreptone.RepositoryStatus {
+	// TODO
 	return nil
 }

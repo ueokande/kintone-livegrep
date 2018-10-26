@@ -14,6 +14,19 @@ func (d *mock) GetProject(ctx context.Context, id string) (livegreptone.Project,
 	return d.projects[id], nil
 }
 
+func (d *mock) GetAllProjects(ctx context.Context) ([]livegreptone.Project, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	projects := make([]livegreptone.Project, len(d.projects))
+	i := 0
+	for _, p := range d.projects {
+		projects[i] = p
+		i++
+	}
+	return projects, nil
+}
+
 func (d *mock) GetProjectIDs(ctx context.Context) ([]string, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -63,4 +76,16 @@ func (d *mock) GetRepositories(ctx context.Context) ([]livegreptone.Repository, 
 		i++
 	}
 	return repos, nil
+}
+
+func (d *mock) GetOwnedProjects(ctx context.Context, repo string, branch string) ([]livegreptone.Project, error) {
+	var projects []livegreptone.Project
+	for _, p := range d.projects {
+		for _, r := range p.Repositories {
+			if r.URL == repo && r.Branch == branch {
+				projects = append(projects, p)
+			}
+		}
+	}
+	return projects, nil
 }

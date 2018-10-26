@@ -28,6 +28,22 @@ func (d *model) GetProject(ctx context.Context, id string) (livegreptone.Project
 	return p, nil
 }
 
+// GetAllProjects returns all projects
+func (d *model) GetAllProjects(ctx context.Context) ([]livegreptone.Project, error) {
+	resp, err := d.etcd.Get(ctx, ProjectKeyPrefix, clientv3.WithPrefix())
+	if err != nil {
+		return nil, err
+	}
+	projects := make([]livegreptone.Project, resp.Count)
+	for i, kv := range resp.Kvs {
+		err := json.Unmarshal(kv.Value, &projects[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return projects, nil
+}
+
 // GetProjectIDs returns project IDs from etcd
 func (d *model) GetProjectIDs(ctx context.Context) ([]string, error) {
 	resp, err := d.etcd.Get(ctx, ProjectKeyPrefix,
@@ -94,4 +110,27 @@ func (d *model) GetRepositories(ctx context.Context) ([]livegreptone.Repository,
 		i++
 	}
 	return repos, nil
+}
+
+// GetOwnedProjects returns owner projects of the repository from etcd
+func (d *model) GetOwnedProjects(ctx context.Context, repo string, branch string) ([]livegreptone.Project, error) {
+	resp, err := d.etcd.Get(ctx, ProjectKeyPrefix, clientv3.WithPrefix())
+	if err != nil {
+		return nil, err
+	}
+	var projects []livegreptone.Project
+	for _, kv := range resp.Kvs {
+		var project livegreptone.Project
+		err := json.Unmarshal(kv.Value, &project)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, r := range project.Repositories {
+			if r.URL == repo && r.Branch == branch {
+				projects = append(projects, project)
+			}
+		}
+	}
+	return projects, nil
 }

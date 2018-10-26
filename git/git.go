@@ -52,16 +52,17 @@ func (v *vcs) Update(ctx context.Context, url string, branch string) (string, er
 }
 
 func (v *vcs) clone(ctx context.Context, url string, branch string, path string) error {
+	log.Printf("[git] Cloning repository url=%s branch=%s", url, branch)
 	stderr := new(bytes.Buffer)
 
 	cmd := exec.CommandContext(ctx, "git", "clone", "-b", branch, url, path)
 	cmd.Stderr = stderr
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("failed to git clone error=%v, url=%s, branch=%s, path=%s, stderr=%s", err, url, branch, path, stderr.String())
+		log.Printf("[git] failed to git clone error=%v, url=%s, branch=%s, path=%s, stderr=%s", err, url, branch, path, stderr.String())
 		return err
 	}
-	log.Printf("cloned repository url=%s branch=%s", url, branch)
+	log.Printf("[git] cloned repository url=%s branch=%s", url, branch)
 	return nil
 }
 
@@ -69,20 +70,23 @@ func (v *vcs) checkoutUpdated(ctx context.Context, path string, branch string) e
 	stderr := new(bytes.Buffer)
 	cmd := exec.CommandContext(ctx, "git", "remote", "update")
 	cmd.Stderr = stderr
+	cmd.Dir = path
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("failed to git remote update, path=%s, stderr=%s", path, stderr.String())
+		log.Printf("[git] failed to git remote update, path=%s, stderr=%s", path, stderr.String())
 		return err
 	}
 
 	stderr = new(bytes.Buffer)
-	cmd = exec.CommandContext(ctx, "git", "checkout", "origin/"+branch)
+	cmd = exec.CommandContext(ctx, "git", "checkout", "-qf", "origin/"+branch)
 	cmd.Stderr = stderr
+	cmd.Dir = path
 	err = cmd.Run()
 	if err != nil {
-		log.Printf("failed to git checkout, path=%s, branch=%s, stderr=%s", path, branch, stderr.String())
+		log.Printf("[git] failed to git checkout, path=%s, branch=%s, stderr=%s", path, branch, stderr.String())
 		return err
 	}
+	log.Printf("[git] checked out path=%s branch=%s", path, branch)
 	return nil
 }
 
@@ -96,7 +100,7 @@ func (v *vcs) getHEAD(ctx context.Context, path string) (string, error) {
 	cmd.Stderr = stderr
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("failed to git rev-parse HEAD, path=%s, stderr=%s", path, stderr.String())
+		log.Printf("[git] failed to git rev-parse HEAD, path=%s, stderr=%s", path, stderr.String())
 		return "", err
 	}
 	return strings.TrimSpace(stdout.String()), nil

@@ -6,16 +6,17 @@ func TestParseGitHubURL(t *testing.T) {
 	cases := []struct {
 		url string
 
+		scheme string
 		origin string
 		owner  string
 		repo   string
 		e      bool
 	}{
-		{"https://github.com/kubernetes/client-go", "github.com", "kubernetes", "client-go", false},
+		{"https://github.com/kubernetes/client-go", "https", "github.com", "kubernetes", "client-go", false},
 	}
 
 	for _, c := range cases {
-		origin, owner, repo, err := ParseGitHubURL(c.url)
+		_, origin, owner, repo, err := ParseGitHubURL(c.url)
 		if c.e && err == nil {
 			t.Error("unexpected err == nil")
 			continue

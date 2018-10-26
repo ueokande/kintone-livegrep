@@ -28,7 +28,7 @@ func ManifestFromProject(project livegreptone.Project) IndexManifest {
 	m.Name = project.Name
 	m.FSPaths = make([]FSPath, len(project.Repositories))
 	for i, r := range project.Repositories {
-		host, owner, repo, err := ParseGitHubURL(r.URL)
+		scheme, host, owner, repo, err := ParseGitHubURL(r.URL)
 		if err != nil {
 			// Ignore non github repos
 			continue
@@ -38,7 +38,7 @@ func ManifestFromProject(project livegreptone.Project) IndexManifest {
 			Name: repo,
 			Path: filepath.Join("/mnt/livegrep-repos", host, owner, repo, r.Branch),
 			Metadata: map[string]string{
-				"url-pattern": host + "/{name}/blob/HEAD/{path}#L{lno}",
+				"url-pattern": scheme + "://" + host + "/{name}/blob/HEAD/{path}#L{lno}",
 			},
 		}
 	}
@@ -46,16 +46,16 @@ func ManifestFromProject(project livegreptone.Project) IndexManifest {
 }
 
 // ParseGitHubURL parses url of the github, and returns host, repository owner, and repository's name
-func ParseGitHubURL(urlstr string) (host, owner, repo string, err error) {
+func ParseGitHubURL(urlstr string) (scheme, host, owner, repo string, err error) {
 	u, err := url.Parse(urlstr)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", err
 	}
 	paths := strings.Split(u.Path, "/")
 	if len(paths) < 3 {
-		return "", "", "", errors.New("imvalid URL")
+		return "", "", "", "", errors.New("imvalid URL")
 	}
-	return u.Host, paths[1], paths[2], nil
+	return u.Scheme, u.Host, paths[1], paths[2], nil
 }
 
 // WebConfig represents a config of the livegrep web server

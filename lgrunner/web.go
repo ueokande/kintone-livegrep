@@ -36,13 +36,9 @@ func (d *runnerImpl) RerunWeb(ctx context.Context, config WebConfig) error {
 		links[i] = h
 	}
 
+	// TODO recreate container only links are changed
 	err = d.docker.ContainerStop(ctx, WebContainerName, nil)
 	if IsErrNoSuchContainer(err) {
-		err := d.createWeb(ctx, f.Name(), links)
-		if err != nil {
-			log.Printf("failed to create web container: %v", err)
-			return err
-		}
 	} else if err != nil {
 		log.Printf("Failed to kill web server: %v", err)
 		return err
@@ -50,8 +46,15 @@ func (d *runnerImpl) RerunWeb(ctx context.Context, config WebConfig) error {
 		log.Printf("Killed web server")
 	}
 
-	// NOTE: Wait to ensure container removed
-	time.Sleep(3 * time.Second)
+	// NOTE wait to ensure container to be removed
+	time.Sleep(5 * time.Second)
+
+	err = d.createWeb(ctx, f.Name(), links)
+	if err != nil {
+		log.Printf("failed to create web container: %v", err)
+		return err
+	}
+	log.Printf("Created web container")
 
 	err = d.docker.ContainerStart(ctx, WebContainerName, types.ContainerStartOptions{})
 	if err != nil {

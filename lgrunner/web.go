@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -48,6 +49,9 @@ func (d *runnerImpl) RerunWeb(ctx context.Context, config WebConfig) error {
 	} else {
 		log.Printf("Killed web server")
 	}
+
+	// NOTE: Wait to ensure container removed
+	time.Sleep(3 * time.Second)
 
 	err = d.docker.ContainerStart(ctx, WebContainerName, types.ContainerStartOptions{})
 	if err != nil {

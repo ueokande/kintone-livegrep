@@ -35,7 +35,7 @@ func ManifestFromProject(project livegreptone.Project) IndexManifest {
 
 		}
 		m.FSPaths[i] = FSPath{
-			Name: repo,
+			Name: owner + "/" + repo,
 			Path: filepath.Join("/mnt/livegrep-repos", host, owner, repo, r.Branch),
 			Metadata: map[string]string{
 				"url-pattern": scheme + "://" + host + "/{name}/blob/HEAD/{path}#L{lno}",

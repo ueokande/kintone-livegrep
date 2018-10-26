@@ -67,6 +67,9 @@ func (d *runnerImpl) createWeb(ctx context.Context, confpath string, links []str
 		Image:    Image,
 		Cmd:      strslice.StrSlice(cmd),
 		Hostname: WebHostName,
+		ExposedPorts: nat.PortSet{
+			"8910/tcp": struct{}{},
+		},
 	}
 	hostConfig := &container.HostConfig{
 		AutoRemove:     true,
@@ -81,6 +84,7 @@ func (d *runnerImpl) createWeb(ctx context.Context, confpath string, links []str
 		},
 		Links: links,
 	}
+
 	_, err := d.docker.ContainerCreate(ctx, containerConfig, hostConfig, nil, WebContainerName)
 	return err
 }

@@ -35,7 +35,7 @@ func (d *runnerImpl) RerunWeb(ctx context.Context, config WebConfig) error {
 		links[i] = h
 	}
 
-	err = d.docker.ContainerKill(ctx, WebContainerName, "SIGTERM")
+	err = d.docker.ContainerStop(ctx, WebContainerName, nil)
 	if IsErrNoSuchContainer(err) {
 		err := d.createWeb(ctx, f.Name(), links)
 		if err != nil {

@@ -65,7 +65,7 @@ func (d *runnerImpl) CreateIndex(ctx context.Context, manifest IndexManifest) er
 func (d *runnerImpl) RerunIndexDB(ctx context.Context, project string) error {
 	log.Printf("restarting index server for %s", project)
 	name := IndexContainerName(project)
-	err := d.docker.ContainerKill(ctx, name, "SIGTERM")
+	err := d.docker.ContainerStop(ctx, name, nil)
 	if IsErrNoSuchContainer(err) {
 		err := d.createIndexDB(ctx, project)
 		if err != nil {

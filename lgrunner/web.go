@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"reflect"
+	"sort"
 	"strings"
 	"time"
 
@@ -17,7 +19,27 @@ import (
 )
 
 func (d *runnerImpl) RerunWeb(ctx context.Context, config WebConfig) error {
+	links := make([]string, len(config.Backends))
+	for i, b := range config.Backends {
+		h := strings.Split(b.Address, ":")[0]
+		links[i] = h
+	}
+	sort.Strings(links)
+
+	insp, err := d.docker.ContainerInspect(ctx, WebContainerName)
+	if err == nil {
+		sort.Strings(insp.HostConfig.Links)
+		if reflect.DeepEqual(insp.HostConfig.Links, links) {
+			// restart is not required
+			return nil
+		}
+	} else if !IsErrNoSuchContainer(err) {
+		log.Printf("failed to inspect web server: %v", err)
+		return err
+	}
+
 	log.Printf("restarting web server")
+
 	f, err := ioutil.TempFile("", "livegreptone-web")
 	if err != nil {
 		return err
@@ -30,16 +52,8 @@ func (d *runnerImpl) RerunWeb(ctx context.Context, config WebConfig) error {
 		return err
 	}
 
-	links := make([]string, len(config.Backends))
-	for i, b := range config.Backends {
-		h := strings.Split(b.Address, ":")[0]
-		links[i] = h
-	}
-
-	// TODO recreate container only links are changed
 	err = d.docker.ContainerStop(ctx, WebContainerName, nil)
-	if IsErrNoSuchContainer(err) {
-	} else if err != nil {
+	if err != nil && !IsErrNoSuchContainer(err) {
 		log.Printf("Failed to kill web server: %v", err)
 		return err
 	} else {
